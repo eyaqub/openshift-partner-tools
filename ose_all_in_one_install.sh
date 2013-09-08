@@ -5,6 +5,63 @@
 # image. When running the %post outside kickstart, a reboot is required
 # afterward.
 
+# Usability Modifications:
+# Argument = -d domain -f fqdn -i ip_address -p password 
+
+usage()
+{
+cat << EOF
+usage: $0 options
+
+This script can be used to quickly get going with an OpenShift Enterprise all-in-one installation.
+It presumes that the user has already configured Red Hat repos, and has a FQDN as their hostname.
+It also presumes that the user is running as root and is on the target installation machine.
+
+OPTIONS:
+   -h      Show this message
+   -d      This is the domain for your installation, such as "example.com"
+   -f      This is the FQDN of the machine, such as "ose.example.com"
+   -i      This is the IP address of the machine, such as "192.168.176.12"
+   -p      Set the default password for all components
+EOF
+}
+
+DOMAIN=
+FQDN=
+IP=
+PASSWORD=
+while getopts "hd:f:i:p:" OPTION
+do
+     case $OPTION in
+         h)
+             usage
+             exit 1
+             ;;
+         d)
+             DOMAIN=$OPTARG
+             ;;
+         f)
+             FQDN=$OPTARG
+             ;;
+         i)
+             IP=$OPTARG
+             ;;
+	 p)
+	     PASSWORD=$OPTARG
+	     ;;
+         ?)
+             usage
+             exit
+             ;;
+     esac
+done
+
+if [[ -z $DOMAIN ]] || [[ -z $FQDN ]] || [[ -z $IP ]] || [[ -z $PASSWORD ]]
+then
+     usage
+     exit 1
+fi
+
 # SPECIFYING PARAMETERS
 #
 # If you supply no parameters, all components are installed on one host
@@ -92,7 +149,7 @@ CONF_INSTALL_COMPONENTS="node,broker,named,activemq,datastore"
 # domain / CONF_DOMAIN
 #   Default: example.com
 #   The network domain under which apps and hosts will be placed.
-CONF_DOMAIN="rhosepaas.com"
+CONF_DOMAIN="$DOMAIN"
 
 # broker_hostname / CONF_BROKER_HOSTNAME
 # node_hostname / CONF_NODE_HOSTNAME
@@ -109,17 +166,17 @@ CONF_DOMAIN="rhosepaas.com"
 #   DNS entries for the hostnames of the other components being 
 #   installed on this host as well. If you are using a nameserver set
 #   up separately, you are responsible for all necessary DNS entries.
-CONF_BROKER_HOSTNAME="ose.rhosepaas.com"
-CONF_NODE_HOSTNAME="ose.rhosepaas.com"
-CONF_NAMED_HOSTNAME="ose.rhosepaas.com"
-CONF_ACTIVEMQ_HOSTNAME="ose.rhosepaas.com"
-CONF_DATASTORE_HOSTNAME="ose.rhosepaas.com"
+CONF_BROKER_HOSTNAME="$FQDN"
+CONF_NODE_HOSTNAME="$FQDN"
+CONF_NAMED_HOSTNAME="$FQDN"
+CONF_ACTIVEMQ_HOSTNAME="$FQDN"
+CONF_DATASTORE_HOSTNAME="$FQDN"
 
 
 # named_ip_addr / CONF_NAMED_IP_ADDR
 #   Default: current IP if installing named, otherwise broker_ip_addr
 #   This is used by every host to configure its primary nameserver.
-CONF_NAMED_IP_ADDR=192.168.176.24
+CONF_NAMED_IP_ADDR=$IP
 
 # bind_key / CONF_BIND_KEY
 #   When the nameserver is remote, use this to specify the HMAC-MD5 key
@@ -141,13 +198,13 @@ CONF_NAMED_IP_ADDR=192.168.176.24
 #   Default: the current IP (at install)
 #   This is used for the node to record its broker. Also is the default
 #   for the nameserver IP if none is given.
-CONF_BROKER_IP_ADDR=192.168.176.24
+CONF_BROKER_IP_ADDR=$3
 
 # node_ip_addr / CONF_NODE_IP_ADDR
 #   Default: the current IP (at install)
 #   This is used for the node to give a public IP, if different from the
 #   one on its NIC.
-CONF_NODE_IP_ADDR=192.168.176.24
+CONF_NODE_IP_ADDR=$3
 
 # A given node can only accept either V1 or V2 cartridges.
 CONF_NODE_V1_ENABLE=false
@@ -171,7 +228,7 @@ CONF_NODE_V1_ENABLE=false
 #   Default: randomized
 #   This is the admin password for the ActiveMQ admin console, which is
 #   not needed by OpenShift but might be useful in troubleshooting.
-CONF_ACTIVEMQ_ADMIN_PASSWORD="ose11ose"
+CONF_ACTIVEMQ_ADMIN_PASSWORD="$PASSWORD"
 
 
 # mcollective_user / CONF_MCOLLECTIVE_USER
@@ -181,7 +238,7 @@ CONF_ACTIVEMQ_ADMIN_PASSWORD="ose11ose"
 #   communicating over the mcollective topic channels in ActiveMQ. Must
 #   be the same on all broker and node hosts.
 CONF_MCOLLECTIVE_USER="mcollective"
-CONF_MCOLLECTIVE_PASSWORD="ose11ose"
+CONF_MCOLLECTIVE_PASSWORD="$PASSWORD"
 
 # mongodb_admin_user / CONF_MONGODB_ADMIN_USER
 # mongodb_admin_password / CONF_MONGODB_ADMIN_PASSWORD
@@ -193,7 +250,7 @@ CONF_MCOLLECTIVE_PASSWORD="ose11ose"
 #   Note: The administrative user will not be created if
 #   CONF_NO_DATASTORE_AUTH_FOR_LOCALHOST is enabled.
 CONF_MONGODB_ADMIN_USER="admin"
-CONF_MONGODB_ADMIN_PASSWORD="ose11ose"
+CONF_MONGODB_ADMIN_PASSWORD="$PASSWORD"
 
 # mongodb_broker_user / CONF_MONGODB_BROKER_USER
 # mongodb_broker_password / CONF_MONGODB_BROKER_PASSWORD
@@ -203,7 +260,7 @@ CONF_MONGODB_ADMIN_PASSWORD="ose11ose"
 #   broker application's MongoDB plugin is also configured with these
 #   values.
 CONF_MONGODB_BROKER_USER="openshift"
-CONF_MONGODB_BROKER_PASSWORD="ose11ose"
+CONF_MONGODB_BROKER_PASSWORD="$PASSWORD"
 
 # mongodb_name / CONF_MONGODB_NAME
 #   Default: openshift_broker
@@ -218,7 +275,7 @@ CONF_MONGODB_NAME="openshift_broker"
 #   file as a demo/test user. You will likely want to remove it after
 #   installation (or just use a different auth method).
 CONF_OPENSHIFT_USER1="oseuser"
-CONF_OPENSHIFT_PASSWORD1="ose11ose"
+CONF_OPENSHIFT_PASSWORD1="$PASSWORD"
 
 # conf_broker_auth_salt / CONF_BROKER_AUTH_SALT
 #CONF_BROKER_AUTH_SALT=""
