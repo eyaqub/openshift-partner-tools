@@ -198,13 +198,13 @@ CONF_NAMED_IP_ADDR=$IP
 #   Default: the current IP (at install)
 #   This is used for the node to record its broker. Also is the default
 #   for the nameserver IP if none is given.
-CONF_BROKER_IP_ADDR=$3
+CONF_BROKER_IP_ADDR=$IP
 
 # node_ip_addr / CONF_NODE_IP_ADDR
 #   Default: the current IP (at install)
 #   This is used for the node to give a public IP, if different from the
 #   one on its NIC.
-CONF_NODE_IP_ADDR=$3
+CONF_NODE_IP_ADDR=$IP
 
 # A given node can only accept either V1 or V2 cartridges.
 CONF_NODE_V1_ENABLE=false
